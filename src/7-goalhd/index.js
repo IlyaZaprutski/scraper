@@ -1,29 +1,25 @@
-import fs from 'fs';
-import { parse } from 'url';
-import path from 'path';
+const fs = require('fs');
+const { parse } = require('url');
+const path = require('path');
+const request = require('request-promise');
 
-import request from 'request-promise';
-
-import scrape from '../1-base/index';
+const { scrape } = require('../0-base-scraper/index');
 
 const getHighlightUrls = async () => {
-  const $ = await scrape({ uri: 'https://goalhd.net/' });
+    const $ = await scrape({ uri: 'https://goalhd.net/' });
 
-  return $('.row.videos .video .title a')
-    .map((i, el) => `https://goalhd.net${$(el).attr('href')}`)
-    .get();
+    return $('.row.videos .video .title a')
+        .map((i, el) => `https://goalhd.net${$(el).attr('href')}`)
+        .get();
 };
 
-var download = function(url, dest, cb) {
-  return new Promise((resolve, reject) => {
-    //var file = fs.createWriteStream(dest);
+const download = (url, dest) => new Promise((resolve, reject) => {
+    // var file = fs.createWriteStream(dest);
 
-    let writeStream = fs.createWriteStream(dest);
-    let stream = request(url).pipe(writeStream);
+    const writeStream = fs.createWriteStream(dest);
+    const stream = request(url).pipe(writeStream);
 
-    stream.on('finish', function() {
-      return resolve();
-    });
+    stream.on('finish', () => resolve());
 
     // var request = https
     //   .get(url, function(response) {
@@ -39,32 +35,31 @@ var download = function(url, dest, cb) {
 
     //     return reject(err.message);
     //   });
-  });
+});
+
+const parseHighlight = async (url) => {
+    const $ = await scrape({ uri: url });
+
+    const title = $('.video-con h1').text();
+    const videoUrl = $('#video').attr('src');
+
+    const fileName = path.basename(parse(videoUrl).pathname);
+
+    if (fileName !== 'zhbpn.mp4') {
+        console.log(fileName);
+
+        return download(videoUrl, `./tmp/7-goalhd/${fileName}`);
+    }
 };
 
-const parseHighlight = async url => {
-  const $ = await scrape({ uri: url });
+const scrapeHighlights = async () => {
+    const highlightUrls = await getHighlightUrls();
 
-  const title = $('.video-con h1').text();
-  const videoUrl = $('#video').attr('src');
+    const info = await Promise.all(highlightUrls.map(url => parseHighlight(url)));
 
-  const fileName = path.basename(parse(videoUrl).pathname);
-
-  if (fileName !== 'zhbpn.mp4') {
-    console.log(fileName);
-
-    return download(videoUrl, './tmp/7-goalhd/' + fileName);
-  }
-
-  return;
+    return { info };
 };
 
-export default async () => {
-  const highlightUrls = await getHighlightUrls();
-
-  console.log(highlightUrls);
-
-  const info = await Promise.all(highlightUrls.map(url => parseHighlight(url)));
-
-  return { info };
+module.exports = {
+    scrapeHighlights,
 };
