@@ -11,7 +11,9 @@
     "dependencies": {
         "cheerio": "^1.0.0-rc.2",
         "lodash": "^4.17.11",
+        "performance-now": "^2.1.0",
         "puppeteer": "^1.10.0",
+        "puppeteer-cluster": "^0.12.1",
         "random-ua": "0.0.6",
         "request-promise": "^4.2.2",
         "socks5-http-client": "^1.0.4",

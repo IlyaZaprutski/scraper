@@ -1,0 +1,150 @@
+<!DOCTYPE html> <meta charset="utf-8" />
+<style>
+    text {
+        font-family: sans-serif;
+    }
+
+    .bar {
+        fill: red;
+    }
+
+    .bar:hover {
+        fill: pink;
+    }
+
+    .axis--x path {
+        display: none;
+    }
+
+    .toolTip {
+        position: absolute;
+        display: none;
+        min-width: 80px;
+        height: auto;
+        background: none repeat scroll 0 0 #ffffff;
+        border: 1px solid #6f257f;
+        padding: 14px;
+        text-align: center;
+    }
+</style>
+
+<svg width="100%" height="700px"></svg>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+    function loadData(path) {
+        return new Promise((resolve, reject) => {
+            d3.json(path, (error, data) => {
+                if (error) {
+                    return reject(error);
+                }
+
+                const countPosts = Object.keys(data).length;
+                const statByUser = {};
+
+                Object.keys(data).forEach(post => {
+                    const likedUsers = data[post];
+                    likedUsers.forEach(user => {
+                        if (!statByUser[user]) {
+                            statByUser[user] = [post];
+                        } else {
+                            statByUser[user].push(post);
+                        }
+                    });
+                });
+
+                const percentByUser = [];
+
+                Object.keys(statByUser).forEach(user => {
+                    const likedPosts = statByUser[user];
+                    const percent = likedPosts.length / countPosts;
+                    percentByUser.push({
+                        user,
+                        likedPosts,
+                        percent,
+                    });
+                });
+
+                return resolve(
+                    percentByUser.filter(x => x.likedPosts.length > 4).sort((a, b) => b.percent - a.percent),
+                );
+            });
+        });
+    }
+
+    function draw(chartData) {
+        const svg = d3.select('svg');
+
+        const margin = {
+            top: 20,
+            right: 20,
+            bottom: 100,
+            left: 40,
+        };
+
+        const tooltip = d3
+            .select('body')
+            .append('div')
+            .attr('class', 'toolTip');
+
+        const x = d3.scaleBand().padding(0.1);
+        const y = d3.scaleLinear();
+
+        x.domain(chartData.map(d => d.user));
+        y.domain([0, d3.max(chartData, d => d.percent)]);
+
+        const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+        g.append('g').attr('class', 'axis axis--x');
+        g.append('g').attr('class', 'axis axis--y');
+
+        g.append('text')
+            .attr('transform', 'rotate(90)')
+            .attr('y', 6)
+            .attr('dy', '0.71em')
+            .attr('text-anchor', 'start');
+
+        const bounds = svg.node().getBoundingClientRect();
+
+        const width = bounds.width - margin.left - margin.right;
+        const height = bounds.height - margin.top - margin.bottom;
+
+        x.rangeRound([0, width]);
+        y.rangeRound([height, 0]);
+
+        g.select('.axis--x')
+            .attr('transform', `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em')
+            .attr('transform', 'rotate(-65)');
+
+        g.select('.axis--y').call(d3.axisLeft(y).ticks(20, '%'));
+
+        const bars = g.selectAll('.bar').data(chartData);
+
+        bars.enter()
+            .append('rect')
+            .attr('class', 'bar')
+            .attr('x', d => x(d.user))
+            .attr('y', d => y(d.percent))
+            .attr('width', x.bandwidth())
+            .attr('height', d => height - y(d.percent))
+            .on('mousemove', d => {
+                tooltip
+                    .style('left', `${d3.event.pageX - 50}px`)
+                    .style('top', `${d3.event.pageY - 70}px`)
+                    .style('display', 'inline-block')
+                    .html(`${d.user}<br>${(d.percent * 100).toFixed(2)}%`);
+            })
+            .on('mouseout', () => {
+                tooltip.style('display', 'none');
+            });
+    }
+
+    loadData('../../tmp/5-puppeteer-instagram-login.json').then(chartData => {
+        draw(chartData);
+    });
+</script>

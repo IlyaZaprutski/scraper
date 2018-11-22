@@ -5,10 +5,10 @@ const { scrapeHighlights } = require('./index');
 jest.setTimeout(3000000);
 
 describe('7-goalhd', () => {
-    test('should load main page', async () => {
-        const result = await scrapeHighlights();
+    test('should scrape highlights', async () => {
+        const highlights = await scrapeHighlights();
 
-        await promises.writeFile('./tmp/7-goalhd.txt', result);
+        await promises.writeFile('./tmp/7-goalhd.json', JSON.stringify(highlights));
 
         return expect(true).toBe(true);
     });
