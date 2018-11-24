@@ -10,22 +10,20 @@
     "license": "ISC",
     "dependencies": {
         "cheerio": "^1.0.0-rc.2",
+        "dotenv": "^6.1.0",
         "lodash": "^4.17.11",
-        "performance-now": "^2.1.0",
         "puppeteer": "^1.10.0",
         "puppeteer-cluster": "^0.12.1",
         "random-ua": "0.0.6",
+        "request": "^2.88.0",
         "request-promise": "^4.2.2",
         "socks5-http-client": "^1.0.4",
-        "socks5-https-client": "^1.2.1",
-        "url-parse": "^1.4.4"
+        "socks5-https-client": "^1.2.1"
     },
     "devDependencies": {
         "eslint": "^5.9.0",
         "eslint-config-airbnb-base": "^13.1.0",
         "eslint-plugin-import": "^2.14.0",
-        "eslint-plugin-jest": "^22.0.0",
-        "jest": "^23.6.0",
         "prettier-eslint": "^8.8.2"
     }
 }

@@ -1,32 +1,27 @@
-const puppeteer = require('puppeteer');
-const cheerio = require('cheerio');
+const { promises } = require('fs');
 
-const baseOptions = {
+const { scrape } = require('./instagram-scraper');
+const { scrape: scrapeRequest } = require('../0-base-scraper/index');
+
+scrape({
     uri: 'https://www.instagram.com/ilya.zaprutski/',
-    transform: body => cheerio.load(body),
+    headless: false,
     setViewport: {
-        width: 1240,
-        height: 680,
+        width: 375,
+        height: 812,
     },
-};
+})
+    .then(async ($) => {
+        await promises.writeFile('./tmp/4-puppeteer-scraper.html', $.html());
 
-const scrape = async (params) => {
-    const options = { ...baseOptions, ...params };
-    const browser = await puppeteer.launch(options);
-    const page = await browser.newPage();
+        const requestContent = await scrapeRequest({ uri: 'https://www.instagram.com/ilya.zaprutski/' });
 
-    await page.setViewport(options.setViewport);
+        await promises.writeFile('./tmp/4-request-scraper.html', requestContent.html());
 
-    await page.goto(options.uri);
+        const stats = $('._3dEHb .g47SY')
+            .map((i, el) => +$(el).text())
+            .get();
 
-    const content = await page.content();
-    const $ = options.transform(content);
-
-    browser.close();
-
-    return $;
-};
-
-module.exports = {
-    scrape,
-};
+        console.log(stats);
+    })
+    .catch(console.log);

@@ -131,6 +131,13 @@ const scrape = async (params) => {
     await page.setRequestInterception(true);
     page.on('request', options.interceptor);
 
+    // page.on('requestfailed', (rf) => {
+    //     if (rf._resourceType !== 'image') {
+    //         console.log('requestfailed:');
+    //         console.log(rf);
+    //     }
+    // });
+
     const posts = await getPostPages(page, options.profile);
 
     const result = {};

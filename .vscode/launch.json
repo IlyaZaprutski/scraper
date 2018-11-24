@@ -7,11 +7,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Jest",
-            "program": "${workspaceRoot}/node_modules/jest/bin/jest",
-            "args": ["./src/5-"],
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen"
+            "name": "Run test",
+            "program": "${workspaceFolder}\\src\\1-base-request\\index.js"
         }
     ]
 }
