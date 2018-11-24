@@ -13,7 +13,6 @@
         "dotenv": "^6.1.0",
         "lodash": "^4.17.11",
         "puppeteer": "^1.10.0",
-        "puppeteer-cluster": "^0.12.1",
         "random-ua": "0.0.6",
         "request": "^2.88.0",
         "request-promise": "^4.2.2",
