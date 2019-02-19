@@ -7,8 +7,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Run test",
-            "program": "${workspaceFolder}\\src\\1-base-request\\index.js"
+            "name": "Run instagram scraper",
+            "program": "${workspaceFolder}/src/5-puppeteer-instagram-login/index.js"
         }
     ]
 }
