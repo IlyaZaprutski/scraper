@@ -14,6 +14,7 @@ const options = {
         login: config.login,
         password: config.password,
     },
+    postsCount: 25,
     interceptor: (request) => {
         if (['image'].indexOf(request.resourceType()) !== -1) {
             request.abort();

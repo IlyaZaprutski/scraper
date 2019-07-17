@@ -11,7 +11,7 @@ const defaultOptions = {
         login: '',
         password: '',
     },
-    loadImage: true,
+    postsCount: 25,
     interceptor: (e) => {
         e.continue();
     },
@@ -23,11 +23,11 @@ const login = async (page, creds) => {
     await page.waitFor('.coreSpriteFacebookIcon', { visible: true });
 
     await page.click('.coreSpriteFacebookIcon');
-    await page.waitForNavigation();
+    await page.waitFor(2000);
 
-    await page.type('#email', creds.login, { delay: 100 });
-    await page.type('#pass', creds.password, { delay: 100 });
-    await page.click('#loginbutton');
+    await page.type('#m_login_email', creds.login, { delay: 100 });
+    await page.type('#m_login_password', creds.password, { delay: 100 });
+    await page.click('#u_0_5');
 
     await page.waitForNavigation();
 };
@@ -38,8 +38,8 @@ const scrapeInfiniteScrollItems = async (page, extractItems, itemTargetCount, sc
 
     let items = await page.evaluate(extractItems);
 
-    if (items.length === itemTargetCount) {
-        return items;
+    if (items.length >= itemTargetCount) {
+        return items.slice(0, itemTargetCount);
     }
 
     do {
@@ -51,7 +51,7 @@ const scrapeInfiniteScrollItems = async (page, extractItems, itemTargetCount, sc
             await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 5000 });
         } catch (error) {
             parsedItems = new Set([...parsedItems, ...(await page.evaluate(extractItems))]);
-            console.log(`real: ${parsedItems.size}, on site: ${itemTargetCount}`);
+            console.error(`real: ${parsedItems.size}, on site: ${itemTargetCount}`);
             break;
         }
 
@@ -65,13 +65,13 @@ const scrapeInfiniteScrollItems = async (page, extractItems, itemTargetCount, sc
     return [...parsedItems];
 };
 
-const getPostPages = async (page, profile) => {
+const getPostPages = async (page, profile, postsCount) => {
     await page.goto(`https://www.instagram.com/${profile}`, {
         waitUntil: ['domcontentloaded'],
     });
     await page.waitFor(1000);
 
-    const countPosts = await page.evaluate(() => parseInt(
+    const realPostsCount = await page.evaluate(() => parseInt(
         document
             .querySelectorAll('.g47SY')[0]
             .innerText.replace(',', '')
@@ -82,7 +82,7 @@ const getPostPages = async (page, profile) => {
     return scrapeInfiniteScrollItems(
         page,
         () => [...document.querySelectorAll('.v1Nh3 a')].map(elem => elem.href),
-        countPosts,
+        realPostsCount > postsCount ? postsCount : realPostsCount,
     );
 };
 
@@ -129,12 +129,12 @@ const scrape = async (params) => {
     await page.setUserAgent(options.userAgent);
 
     await login(page, options.creds);
-    await page.waitFor(1000);
+    await page.waitFor(2000);
 
     await page.setRequestInterception(true);
     page.on('request', options.interceptor);
 
-    const posts = await getPostPages(page, options.profile);
+    const posts = await getPostPages(page, options.profile, options.postsCount);
 
     const result = {};
 
@@ -143,7 +143,7 @@ const scrape = async (params) => {
             const users = await getLikedUsers(page, posts[i]);
             result[posts[i]] = users;
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     }
 
